@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS public.osm_vial CASCADE;
-CREATE TABLE public.osm_vial AS
+DROP TABLE IF EXISTS argenmap.osm_vial CASCADE;
+CREATE TABLE argenmap.osm_vial AS
 SELECT
   osm_id,
   name,
@@ -37,7 +37,7 @@ SELECT
   -- other_tags -> 'lanes' AS lanes,
   -- other_tags -> 'surface' AS surface,
   -- other_tags -> 'smoothness' AS smoothness,
-  wkb_geometry AS geom
+  ST_SetSRID(ST_Transform(wkb_geometry, 3857),3857) AS geom
 FROM
   osm.lines
 WHERE
@@ -61,11 +61,21 @@ WHERE
     'tertiary',
     'trunk'
   );
-GRANT
-SELECT
-  ON TABLE public.osm_vial TO readonly;
-GRANT ALL ON TABLE public.osm_vial TO admins;
-ALTER TABLE
-  public.osm_vial
-ADD
-  CONSTRAINT osm_vial_osm_id_pk PRIMARY KEY (osm_id);
+
+ALTER TABLE argenmap.osm_vial
+ADD PRIMARY KEY (osm_id);
+
+CREATE INDEX gix_osm_vial_geom 
+ON argenmap.osm_vial 
+USING gist(geom) TABLESPACE pg_default;
+
+CLUSTER argenmap.osm_vial 
+USING gix_osm_vial_geom;
+ANALYZE argenmap.osm_vial;
+
+SELECT Populate_Geometry_Columns('argenmap.osm_vial'::regclass::oid);
+
+ALTER TABLE argenmap.osm_vial
+    OWNER to admins;
+
+GRANT SELECT ON TABLE argenmap.osm_vial TO readonly;
