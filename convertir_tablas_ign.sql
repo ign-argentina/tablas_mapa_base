@@ -7,30 +7,38 @@ para mejorar el rendimiento del renderizado de teselas.
 
 -- Convertir pais
 
--- DROP TABLE IF EXISTS argenmap.pais;
--- SELECT
---   gid,
---   ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom,
---   nam INTO TABLE argenmap.pais
--- FROM
---   public.pais;
-
--- ALTER TABLE argenmap.pais 
--- ADD PRIMARY KEY (gid);
-
--- CREATE INDEX gix_pais_geom 
--- ON argenmap.pais 
--- USING gist(geom) TABLESPACE pg_default;
-
--- CLUSTER argenmap.pais USING gix_pais_geom;
--- ANALYZE argenmap.pais;
-
--- SELECT Populate_Geometry_Columns('argenmap.pais'::regclass::oid);
-
--- ALTER TABLE argenmap.pais
---     OWNER to admins;
-
--- GRANT SELECT ON TABLE argenmap.pais TO readonly;
+DROP TABLE IF EXISTS argenmap.pais;
+SELECT
+  gid,
+  nam,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.pais
+FROM
+  public.pais;
+ALTER TABLE
+  argenmap.pais
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_pais_geom ON argenmap.pais USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.pais USING gix_pais_geom;
+ANALYZE argenmap.pais;
+SELECT
+  Populate_Geometry_Columns('argenmap.pais' :: regclass :: oid);
+ALTER TABLE
+  argenmap.pais OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.pais TO readonly;
 
 -- Fin pais
 
@@ -376,32 +384,33 @@ GRANT SELECT ON TABLE argenmap.lineas_de_geomorfologia TO readonly;
 
 -- Convertir puntos_de_geomorfologia
 -- REVISAR ERROR:  transform: couldn't project point (-1.79769e+308 -1.79769e+308 -1.79769e+308): latitude or longitude exceeded limits (-14)
--- DROP TABLE IF EXISTS argenmap.puntos_de_geomorfologia;
--- SELECT
---   gid,
---   ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom, 
---   entidad, 
---   fna INTO TABLE argenmap.puntos_de_geomorfologia
--- FROM
---   public.puntos_de_geomorfologia;
+DROP TABLE IF EXISTS argenmap.puntos_de_geomorfologia;
+SELECT
+  gid,
+  ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom, 
+  entidad, 
+  fna INTO TABLE argenmap.puntos_de_geomorfologia
+FROM
+  public.puntos_de_geomorfologia
+WHERE gid NOT IN ('17636', '64937');
 
--- ALTER TABLE argenmap.puntos_de_geomorfologia 
--- ADD PRIMARY KEY (gid);
+ALTER TABLE argenmap.puntos_de_geomorfologia 
+ADD PRIMARY KEY (gid);
 
--- CREATE INDEX gix_puntos_de_geomorfologia_geom 
--- ON argenmap.puntos_de_geomorfologia 
--- USING gist(geom) TABLESPACE pg_default;
+CREATE INDEX gix_puntos_de_geomorfologia_geom 
+ON argenmap.puntos_de_geomorfologia 
+USING gist(geom) TABLESPACE pg_default;
 
--- CLUSTER argenmap.puntos_de_geomorfologia 
--- USING gix_puntos_de_geomorfologia_geom;
--- ANALYZE argenmap.puntos_de_geomorfologia;
+CLUSTER argenmap.puntos_de_geomorfologia 
+USING gix_puntos_de_geomorfologia_geom;
+ANALYZE argenmap.puntos_de_geomorfologia;
 
--- SELECT Populate_Geometry_Columns('argenmap.puntos_de_geomorfologia'::regclass::oid);
+SELECT Populate_Geometry_Columns('argenmap.puntos_de_geomorfologia'::regclass::oid);
 
--- ALTER TABLE argenmap.puntos_de_geomorfologia
---     OWNER to admins;
+ALTER TABLE argenmap.puntos_de_geomorfologia
+    OWNER to admins;
 
--- GRANT SELECT ON TABLE argenmap.puntos_de_geomorfologia TO readonly;
+GRANT SELECT ON TABLE argenmap.puntos_de_geomorfologia TO readonly;
 
 -- Fin puntos_de_geomorfologia
 
@@ -466,127 +475,164 @@ GRANT SELECT ON TABLE argenmap.toponimia_maritima TO readonly;
 -- Fin toponimia_maritima
 
 -- Convertir linea_de_limite
--- REVISAR ERROR:  transform: couldn't project point (-25 -90 0): tolerance condition error (-20)
--- DROP TABLE IF EXISTS argenmap.linea_de_limite;
--- SELECT
---   gid,
---   ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom, 
---   entidad, 
---   vlj, 
---   objeto INTO TABLE argenmap.linea_de_limite
--- FROM
---   public.linea_de_limite;
 
--- ALTER TABLE argenmap.linea_de_limite 
--- ADD PRIMARY KEY (gid);
-
--- CREATE INDEX gix_linea_de_limite_geom 
--- ON argenmap.linea_de_limite 
--- USING gist(geom) TABLESPACE pg_default;
-
--- CLUSTER argenmap.linea_de_limite 
--- USING gix_linea_de_limite_geom;
--- ANALYZE argenmap.linea_de_limite;
-
--- SELECT Populate_Geometry_Columns('argenmap.linea_de_limite'::regclass::oid);
-
--- ALTER TABLE argenmap.linea_de_limite
---     OWNER to admins;
-
--- GRANT SELECT ON TABLE argenmap.linea_de_limite TO readonly;
+DROP TABLE IF EXISTS argenmap.linea_de_limite;
+SELECT
+  gid,
+  --ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom,
+  entidad,
+  vlj,
+  objeto,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.linea_de_limite
+FROM
+  public.linea_de_limite;
+  -- WHERE
+  --   gid NOT IN ('79', '6465')
+  --   OR geom IS NOT NULL;
+ALTER TABLE
+  argenmap.linea_de_limite
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_linea_de_limite_geom ON argenmap.linea_de_limite USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.linea_de_limite USING gix_linea_de_limite_geom;
+ANALYZE argenmap.linea_de_limite;
+SELECT
+  Populate_Geometry_Columns('argenmap.linea_de_limite' :: regclass :: oid);
+ALTER TABLE
+  argenmap.linea_de_limite OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.linea_de_limite TO readonly;
 
 -- Fin linea_de_limite
 
 -- Convertir puntos_de_asentamientos_y_edificios
---REVISAR ERROR:  transform: couldn't project point (-1.79769e+308 -1.79769e+308 -1.79769e+308): latitude or longitude exceeded limits (-14)
--- DROP TABLE IF EXISTS argenmap.puntos_de_asentamientos_y_edificios;
--- SELECT
---   gid, 
---   ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom, 
---   entidad, 
---   objeto, 
---   fna, 
---   ca1, 
---   ahb INTO TABLE argenmap.puntos_de_asentamientos_y_edificios
--- FROM
---   public.puntos_de_asentamientos_y_edificios;
 
--- ALTER TABLE argenmap.puntos_de_asentamientos_y_edificios 
--- ADD PRIMARY KEY (gid);
-
--- CREATE INDEX gix_puntos_de_asentamientos_y_edificios_geom 
--- ON argenmap.puntos_de_asentamientos_y_edificios 
--- USING gist(geom) TABLESPACE pg_default;
-
--- CLUSTER argenmap.puntos_de_asentamientos_y_edificios 
--- USING gix_puntos_de_asentamientos_y_edificios_geom;
--- ANALYZE argenmap.puntos_de_asentamientos_y_edificios;
-
--- SELECT Populate_Geometry_Columns('argenmap.puntos_de_asentamientos_y_edificios'::regclass::oid);
-
--- ALTER TABLE argenmap.puntos_de_asentamientos_y_edificios
---     OWNER to admins;
-
--- GRANT SELECT ON TABLE argenmap.puntos_de_asentamientos_y_edificios TO readonly;
+DROP TABLE IF EXISTS argenmap.puntos_de_asentamientos_y_edificios;
+SELECT
+  gid,
+  --ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom,
+  entidad,
+  objeto,
+  fna,
+  ca1,
+  ahb,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.puntos_de_asentamientos_y_edificios
+FROM
+  public.puntos_de_asentamientos_y_edificios;
+ALTER TABLE
+  argenmap.puntos_de_asentamientos_y_edificios
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_puntos_de_asentamientos_y_edificios_geom ON argenmap.puntos_de_asentamientos_y_edificios USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.puntos_de_asentamientos_y_edificios USING gix_puntos_de_asentamientos_y_edificios_geom;
+ANALYZE argenmap.puntos_de_asentamientos_y_edificios;
+SELECT
+  Populate_Geometry_Columns(
+    'argenmap.puntos_de_asentamientos_y_edificios' :: regclass :: oid
+  );
+ALTER TABLE
+  argenmap.puntos_de_asentamientos_y_edificios OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.puntos_de_asentamientos_y_edificios TO readonly;
 
 -- Fin puntos_de_asentamientos_y_edificios
 
 -- Convertir departamento
--- REVISAR ERROR:  transform: couldn't project point (-25 -90 0): tolerance condition error (-20)
--- DROP TABLE IF EXISTS argenmap.departamento;
--- SELECT
---   gid, 
---   ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom, 
---   fna INTO TABLE argenmap.departamento
--- FROM
---   public.departamento;
 
--- ALTER TABLE argenmap.departamento 
--- ADD PRIMARY KEY (gid);
-
--- CREATE INDEX gix_departamento_geom 
--- ON argenmap.departamento 
--- USING gist(geom) TABLESPACE pg_default;
-
--- CLUSTER argenmap.departamento 
--- USING gix_departamento_geom;
--- ANALYZE argenmap.departamento;
-
--- SELECT Populate_Geometry_Columns('argenmap.departamento'::regclass::oid);
-
--- ALTER TABLE argenmap.departamento
---     OWNER to admins;
-
--- GRANT SELECT ON TABLE argenmap.departamento TO readonly;
+DROP TABLE IF EXISTS argenmap.departamento;
+SELECT
+  gid,
+  --ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom,
+  fna,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.departamento
+FROM
+  public.departamento;
+ALTER TABLE
+  argenmap.departamento
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_departamento_geom ON argenmap.departamento USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.departamento USING gix_departamento_geom;
+ANALYZE argenmap.departamento;
+SELECT
+  Populate_Geometry_Columns('argenmap.departamento' :: regclass :: oid);
+ALTER TABLE
+  argenmap.departamento OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.departamento TO readonly;
 
 -- Fin departamento
 
 -- Convertir provincia
--- REVISAR ERROR:  transform: couldn't project point (-25 -90 0): tolerance condition error (-20)
--- DROP TABLE IF EXISTS argenmap.provincia;
--- SELECT
---   gid, 
---   ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom, 
---   fna INTO TABLE argenmap.provincia
--- FROM
---   public.provincia;
 
--- ALTER TABLE argenmap.provincia 
--- ADD PRIMARY KEY (gid);
-
--- CREATE INDEX gix_provincia_geom 
--- ON argenmap.provincia 
--- USING gist(geom) TABLESPACE pg_default;
-
--- CLUSTER argenmap.provincia 
--- USING gix_provincia_geom;
--- ANALYZE argenmap.provincia;
-
--- SELECT Populate_Geometry_Columns('argenmap.provincia'::regclass::oid);
-
--- ALTER TABLE argenmap.provincia
---     OWNER to admins;
-
--- GRANT SELECT ON TABLE argenmap.provincia TO readonly;
+DROP TABLE IF EXISTS argenmap.provincia;
+SELECT
+  gid,
+  --ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom,
+  fna,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.provincia
+FROM
+  public.provincia;
+ALTER TABLE
+  argenmap.provincia
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_provincia_geom ON argenmap.provincia USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.provincia USING gix_provincia_geom;
+ANALYZE argenmap.provincia;
+SELECT
+  Populate_Geometry_Columns('argenmap.provincia' :: regclass :: oid);
+ALTER TABLE
+  argenmap.provincia OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.provincia TO readonly;
 
 -- Fin provincia
