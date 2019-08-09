@@ -124,4 +124,5 @@ FROM
 						nam::varchar,
 						sag::varchar
 					   FROM areas_de_recreacion
-) as tbl;
+) as tbl
+WHERE ST_Within(geom, ST_MakeEnvelope(-180, -90, 180, 90, 4326)::geometry) = true;
