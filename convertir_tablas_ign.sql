@@ -298,7 +298,7 @@ SELECT
   hct, 
   cod_rn INTO TABLE argenmap.red_vial_nacional_dnv
 FROM
-  public.red_vial_nacional_dnv_2018;
+  externos.red_vial_nacional_dnv;
 
 ALTER TABLE argenmap.red_vial_nacional_dnv 
 ADD PRIMARY KEY (gid);
@@ -387,9 +387,18 @@ GRANT SELECT ON TABLE argenmap.lineas_de_geomorfologia TO readonly;
 DROP TABLE IF EXISTS argenmap.puntos_de_geomorfologia;
 SELECT
   gid,
-  ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom, 
-  entidad, 
-  fna INTO TABLE argenmap.puntos_de_geomorfologia
+  entidad,
+  fna,
+  ST_SetSRID(
+    ST_Transform(
+      ST_Intersection(
+        geom,
+        ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+      ),
+      3857
+    ),
+    3857
+  ) as geom INTO TABLE argenmap.puntos_de_geomorfologia
 FROM
   public.puntos_de_geomorfologia
 WHERE gid NOT IN ('17636', '64937');
@@ -422,7 +431,7 @@ SELECT
   ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom, 
   nombre INTO TABLE argenmap.toponimos_oceano
 FROM
-  public.toponimos_oceano;
+  externos.toponimos_oceano;
 
 ALTER TABLE argenmap.toponimos_oceano 
 ADD PRIMARY KEY (gid);
@@ -452,7 +461,7 @@ SELECT
   ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom, 
   nombre  INTO TABLE argenmap.toponimia_maritima
 FROM
-  public.toponimia_maritima;
+  externos.toponimia_maritima;
 
 ALTER TABLE argenmap.toponimia_maritima 
 ADD PRIMARY KEY (gid);
@@ -528,20 +537,18 @@ SELECT
   fna,
   ca1,
   ahb,
-  ST_Multi(
-    ST_SetSRID(
-      ST_Transform(
-        ST_Intersection(
-          geom,
-          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
-        ),
-        3857
+  ST_SetSRID(
+    ST_Transform(
+      ST_Intersection(
+        geom,
+        ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
       ),
       3857
-    )
+    ),
+    3857
   ) as geom INTO TABLE argenmap.puntos_de_asentamientos_y_edificios
 FROM
-  public.puntos_de_asentamientos_y_edificios;
+  public.v_asentamientos_humanos;
 ALTER TABLE
   argenmap.puntos_de_asentamientos_y_edificios
 ADD
