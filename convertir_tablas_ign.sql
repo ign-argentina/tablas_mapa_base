@@ -643,3 +643,29 @@ SELECT
   ON TABLE argenmap.provincia TO readonly;
 
 -- Fin provincia
+
+-- Convertir toponimos_oceano_maritimo
+
+DROP TABLE IF EXISTS argenmap.toponimos_oceano_maritimo;
+SELECT
+  gid,
+  nombre,
+  geom INTO TABLE argenmap.toponimos_oceano_maritimo
+FROM
+  externos.toponimos_oceano_maritimo;
+ALTER TABLE
+  argenmap.toponimos_oceano_maritimo
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_toponimos_oceano_maritimo_geom ON argenmap.toponimos_oceano_maritimo USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.toponimos_oceano_maritimo USING gix_toponimos_oceano_maritimo_geom;
+ANALYZE argenmap.toponimos_oceano_maritimo;
+SELECT
+  Populate_Geometry_Columns('argenmap.toponimos_oceano_maritimo' :: regclass :: oid);
+ALTER TABLE
+  argenmap.toponimos_oceano_maritimo OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.toponimos_oceano_maritimo TO readonly;
+
+-- Fin toponimos_oceano_maritimo
