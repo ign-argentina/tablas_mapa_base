@@ -423,66 +423,6 @@ GRANT SELECT ON TABLE argenmap.puntos_de_geomorfologia TO readonly;
 
 -- Fin puntos_de_geomorfologia
 
--- Convertir toponimos_oceano
-
-DROP TABLE IF EXISTS argenmap.toponimos_oceano;
-SELECT
-  gid,
-  ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom, 
-  nombre INTO TABLE argenmap.toponimos_oceano
-FROM
-  externos.toponimos_oceano;
-
-ALTER TABLE argenmap.toponimos_oceano 
-ADD PRIMARY KEY (gid);
-
-CREATE INDEX gix_toponimos_oceano_geom 
-ON argenmap.toponimos_oceano 
-USING gist(geom) TABLESPACE pg_default;
-
-CLUSTER argenmap.toponimos_oceano 
-USING gix_toponimos_oceano_geom;
-ANALYZE argenmap.toponimos_oceano;
-
-SELECT Populate_Geometry_Columns('argenmap.toponimos_oceano'::regclass::oid);
-
-ALTER TABLE argenmap.toponimos_oceano
-    OWNER to admins;
-
-GRANT SELECT ON TABLE argenmap.toponimos_oceano TO readonly;
-
--- Fin toponimos_oceano
-
--- Convertir toponimia_maritima
-
-DROP TABLE IF EXISTS argenmap.toponimia_maritima;
-SELECT
-  gid,
-  ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom, 
-  nombre  INTO TABLE argenmap.toponimia_maritima
-FROM
-  externos.toponimia_maritima;
-
-ALTER TABLE argenmap.toponimia_maritima 
-ADD PRIMARY KEY (gid);
-
-CREATE INDEX gix_toponimia_maritima_geom 
-ON argenmap.toponimia_maritima 
-USING gist(geom) TABLESPACE pg_default;
-
-CLUSTER argenmap.toponimia_maritima 
-USING gix_toponimia_maritima_geom;
-ANALYZE argenmap.toponimia_maritima;
-
-SELECT Populate_Geometry_Columns('argenmap.toponimia_maritima'::regclass::oid);
-
-ALTER TABLE argenmap.toponimia_maritima
-    OWNER to admins;
-
-GRANT SELECT ON TABLE argenmap.toponimia_maritima TO readonly;
-
--- Fin toponimia_maritima
-
 -- Convertir linea_de_limite
 
 DROP TABLE IF EXISTS argenmap.linea_de_limite;
@@ -650,7 +590,18 @@ DROP TABLE IF EXISTS argenmap.toponimos_oceano_maritimo;
 SELECT
   gid,
   nombre,
-  geom INTO TABLE argenmap.toponimos_oceano_maritimo
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.toponimos_oceano_maritimo
 FROM
   externos.toponimos_oceano_maritimo;
 ALTER TABLE
