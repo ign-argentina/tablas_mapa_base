@@ -669,3 +669,78 @@ SELECT
   ON TABLE argenmap.toponimos_oceano_maritimo TO readonly;
 
 -- Fin toponimos_oceano_maritimo
+
+-- Convertir red_vial_nacional_dnv
+
+DROP TABLE IF EXISTS argenmap.red_vial_nacional_dnv;
+SELECT
+  gid,
+  nam,
+  hct,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.red_vial_nacional_dnv
+FROM
+  externos.red_vial_nacional_dnv;
+ALTER TABLE
+  argenmap.red_vial_nacional_dnv
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_red_vial_nacional_dnv_geom2 ON argenmap.red_vial_nacional_dnv USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.red_vial_nacional_dnv USING gix_red_vial_nacional_dnv_geom2;
+ANALYZE argenmap.red_vial_nacional_dnv;
+SELECT
+  Populate_Geometry_Columns('argenmap.red_vial_nacional_dnv' :: regclass :: oid);
+ALTER TABLE
+  argenmap.red_vial_nacional_dnv OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.red_vial_nacional_dnv TO readonly;
+
+-- Fin red_vial_nacional_dnv
+
+-- Convertir red_vial_nacional_dnv_tipo_pavimento
+
+DROP TABLE IF EXISTS argenmap.red_vial_nacional_dnv_tipo_pavimento;
+SELECT
+  gid,
+  grupo_mate,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.red_vial_nacional_dnv_tipo_pavimento
+FROM
+  externos.red_vial_nacional_dnv_tipo_pavimento;
+ALTER TABLE
+  argenmap.red_vial_nacional_dnv_tipo_pavimento
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_red_vial_nacional_dnv_tipo_pavimento_geom ON argenmap.red_vial_nacional_dnv_tipo_pavimento USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.red_vial_nacional_dnv_tipo_pavimento USING gix_red_vial_nacional_dnv_tipo_pavimento_geom;
+ANALYZE argenmap.red_vial_nacional_dnv_tipo_pavimento;
+SELECT
+  Populate_Geometry_Columns('argenmap.red_vial_nacional_dnv_tipo_pavimento' :: regclass :: oid);
+ALTER TABLE
+  argenmap.red_vial_nacional_dnv_tipo_pavimento OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.red_vial_nacional_dnv_tipo_pavimento TO readonly;
+
+-- Fin red_vial_nacional_dnv_tipo_pavimento
