@@ -695,3 +695,42 @@ SELECT
   ON TABLE argenmap.red_vial_nacional_dnv_tipo_pavimento TO readonly;
 
 -- Fin red_vial_nacional_dnv_tipo_pavimento
+
+-- Convertir plataforma
+
+DROP TABLE IF EXISTS argenmap.plataforma;
+SELECT
+  gid,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.plataforma
+FROM
+  externos.plataforma;
+  -- WHERE
+  --   gid NOT IN ('79', '6465')
+  --   OR geom IS NOT NULL;
+ALTER TABLE
+  argenmap.plataforma
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_plataforma_geom ON argenmap.plataforma USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.plataforma USING gix_plataforma_geom;
+ANALYZE argenmap.plataforma;
+SELECT
+  Populate_Geometry_Columns('argenmap.plataforma' :: regclass :: oid);
+ALTER TABLE
+  argenmap.plataforma OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.plataforma TO readonly;
+
+-- Fin plataforma
