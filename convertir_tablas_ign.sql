@@ -289,37 +289,6 @@ GRANT SELECT ON TABLE argenmap.vial TO readonly;
 
 -- Fin vial
 
--- Convertir red_vial_nacional_dnv
-
-DROP TABLE IF EXISTS argenmap.red_vial_nacional_dnv;
-SELECT
-  gid,
-  ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom,
-  hct, 
-  cod_rn INTO TABLE argenmap.red_vial_nacional_dnv
-FROM
-  externos.red_vial_nacional_dnv;
-
-ALTER TABLE argenmap.red_vial_nacional_dnv 
-ADD PRIMARY KEY (gid);
-
-CREATE INDEX gix_red_vial_nacional_dnv_geom 
-ON argenmap.red_vial_nacional_dnv 
-USING gist(geom) TABLESPACE pg_default;
-
-CLUSTER argenmap.red_vial_nacional_dnv 
-USING gix_red_vial_nacional_dnv_geom;
-ANALYZE argenmap.red_vial_nacional_dnv;
-
-SELECT Populate_Geometry_Columns('argenmap.red_vial_nacional_dnv'::regclass::oid);
-
-ALTER TABLE argenmap.red_vial_nacional_dnv
-    OWNER to admins;
-
-GRANT SELECT ON TABLE argenmap.red_vial_nacional_dnv TO readonly;
-
--- Fin red_vial_nacional_dnv
-
 -- Convertir lineas_de_transporte_ferroviario
 
 DROP TABLE IF EXISTS argenmap.lineas_de_transporte_ferroviario;
@@ -430,8 +399,8 @@ SELECT
   gid,
   --ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom,
   entidad,
-  vlj,
   objeto,
+  nam,
   ST_Multi(
     ST_SetSRID(
       ST_Transform(
@@ -696,9 +665,9 @@ SELECT
 
 -- Fin red_vial_nacional_dnv_tipo_pavimento
 
--- Convertir plataforma
+-- Convertir plataforma_completa
 
-DROP TABLE IF EXISTS argenmap.plataforma;
+DROP TABLE IF EXISTS argenmap.plataforma_completa;
 SELECT
   gid,
   ST_Multi(
@@ -712,25 +681,25 @@ SELECT
       ),
       3857
     )
-  ) as geom INTO TABLE argenmap.plataforma
+  ) as geom INTO TABLE argenmap.plataforma_completa
 FROM
-  externos.plataforma;
+  externos.plataforma_completa;
   -- WHERE
   --   gid NOT IN ('79', '6465')
   --   OR geom IS NOT NULL;
 ALTER TABLE
-  argenmap.plataforma
+  argenmap.plataforma_completa
 ADD
   PRIMARY KEY (gid);
-CREATE INDEX gix_plataforma_geom ON argenmap.plataforma USING gist(geom) TABLESPACE pg_default;
-CLUSTER argenmap.plataforma USING gix_plataforma_geom;
-ANALYZE argenmap.plataforma;
+CREATE INDEX gix_plataforma_completa_geom ON argenmap.plataforma_completa USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.plataforma_completa USING gix_plataforma_completa_geom;
+ANALYZE argenmap.plataforma_completa;
 SELECT
-  Populate_Geometry_Columns('argenmap.plataforma' :: regclass :: oid);
+  Populate_Geometry_Columns('argenmap.plataforma_completa' :: regclass :: oid);
 ALTER TABLE
-  argenmap.plataforma OWNER to admins;
+  argenmap.plataforma_completa OWNER to admins;
 GRANT
 SELECT
-  ON TABLE argenmap.plataforma TO readonly;
+  ON TABLE argenmap.plataforma_completa TO readonly;
 
--- Fin plataforma
+-- Fin plataforma_completa
