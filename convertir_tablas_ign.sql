@@ -703,3 +703,77 @@ SELECT
   ON TABLE argenmap.plataforma_completa TO readonly;
 
 -- Fin plataforma_completa
+
+-- Convertir etiquetas_provincias
+
+DROP TABLE IF EXISTS argenmap.etiquetas_provincias;
+SELECT
+  gid,
+  fna,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.etiquetas_provincias
+FROM
+  externos.etiquetas_provincias;
+ALTER TABLE
+  argenmap.etiquetas_provincias
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_etiquetas_provincias_geom ON argenmap.etiquetas_provincias USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.etiquetas_provincias USING gix_etiquetas_provincias_geom;
+ANALYZE argenmap.etiquetas_provincias;
+SELECT
+  Populate_Geometry_Columns('argenmap.etiquetas_provincias' :: regclass :: oid);
+ALTER TABLE
+  argenmap.etiquetas_provincias OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.etiquetas_provincias TO readonly;
+
+-- Fin etiquetas_provincias
+
+-- Convertir etiquetas_paises
+
+DROP TABLE IF EXISTS argenmap.etiquetas_provincias;
+SELECT
+  gid,
+  nam,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.etiquetas_paises
+FROM
+  externos.etiquetas_paises;
+ALTER TABLE
+  argenmap.etiquetas_paises
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_etiquetas_paises_geom ON argenmap.etiquetas_paises USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.etiquetas_paises USING gix_etiquetas_paises_geom;
+ANALYZE argenmap.etiquetas_paises;
+SELECT
+  Populate_Geometry_Columns('argenmap.etiquetas_paises' :: regclass :: oid);
+ALTER TABLE
+  argenmap.etiquetas_paises OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.etiquetas_paises TO readonly;
+
+-- Fin etiquetas_paises
