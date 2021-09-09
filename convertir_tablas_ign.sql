@@ -352,7 +352,6 @@ GRANT SELECT ON TABLE argenmap.lineas_de_geomorfologia TO readonly;
 -- Fin lineas_de_geomorfologia
 
 -- Convertir puntos_de_geomorfologia
--- REVISAR ERROR:  transform: couldn't project point (-1.79769e+308 -1.79769e+308 -1.79769e+308): latitude or longitude exceeded limits (-14)
 DROP TABLE IF EXISTS argenmap.puntos_de_geomorfologia;
 SELECT
   gid,
@@ -369,8 +368,7 @@ SELECT
     3857
   ) as geom INTO TABLE argenmap.puntos_de_geomorfologia
 FROM
-  public.puntos_de_geomorfologia
-WHERE gid NOT IN ('17636', '64937');
+  public.puntos_de_geomorfologia;
 
 ALTER TABLE argenmap.puntos_de_geomorfologia 
 ADD PRIMARY KEY (gid);
@@ -590,120 +588,6 @@ SELECT
 
 -- Fin toponimos_oceano_maritimo
 
--- Convertir red_vial_nacional_dnv
-
-DROP TABLE IF EXISTS argenmap.red_vial_nacional_dnv;
-SELECT
-  gid,
-  nam,
-  hct,
-  ST_Multi(
-    ST_SetSRID(
-      ST_Transform(
-        ST_Intersection(
-          geom,
-          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
-        ),
-        3857
-      ),
-      3857
-    )
-  ) as geom INTO TABLE argenmap.red_vial_nacional_dnv
-FROM
-  externos.red_vial_nacional_dnv;
-ALTER TABLE
-  argenmap.red_vial_nacional_dnv
-ADD
-  PRIMARY KEY (gid);
-CREATE INDEX gix_red_vial_nacional_dnv_geom2 ON argenmap.red_vial_nacional_dnv USING gist(geom) TABLESPACE pg_default;
-CLUSTER argenmap.red_vial_nacional_dnv USING gix_red_vial_nacional_dnv_geom2;
-ANALYZE argenmap.red_vial_nacional_dnv;
-SELECT
-  Populate_Geometry_Columns('argenmap.red_vial_nacional_dnv' :: regclass :: oid);
-ALTER TABLE
-  argenmap.red_vial_nacional_dnv OWNER to admins;
-GRANT
-SELECT
-  ON TABLE argenmap.red_vial_nacional_dnv TO readonly;
-
--- Fin red_vial_nacional_dnv
-
--- Convertir red_vial_nacional_dnv_tipo_pavimento
-
-DROP TABLE IF EXISTS argenmap.red_vial_nacional_dnv_tipo_pavimento;
-SELECT
-  gid,
-  grupo_mate,
-  ST_Multi(
-    ST_SetSRID(
-      ST_Transform(
-        ST_Intersection(
-          geom,
-          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
-        ),
-        3857
-      ),
-      3857
-    )
-  ) as geom INTO TABLE argenmap.red_vial_nacional_dnv_tipo_pavimento
-FROM
-  externos.red_vial_nacional_dnv_tipo_pavimento;
-ALTER TABLE
-  argenmap.red_vial_nacional_dnv_tipo_pavimento
-ADD
-  PRIMARY KEY (gid);
-CREATE INDEX gix_red_vial_nacional_dnv_tipo_pavimento_geom ON argenmap.red_vial_nacional_dnv_tipo_pavimento USING gist(geom) TABLESPACE pg_default;
-CLUSTER argenmap.red_vial_nacional_dnv_tipo_pavimento USING gix_red_vial_nacional_dnv_tipo_pavimento_geom;
-ANALYZE argenmap.red_vial_nacional_dnv_tipo_pavimento;
-SELECT
-  Populate_Geometry_Columns('argenmap.red_vial_nacional_dnv_tipo_pavimento' :: regclass :: oid);
-ALTER TABLE
-  argenmap.red_vial_nacional_dnv_tipo_pavimento OWNER to admins;
-GRANT
-SELECT
-  ON TABLE argenmap.red_vial_nacional_dnv_tipo_pavimento TO readonly;
-
--- Fin red_vial_nacional_dnv_tipo_pavimento
-
--- Convertir plataforma_completa
-
-DROP TABLE IF EXISTS argenmap.plataforma_completa;
-SELECT
-  gid,
-  ST_Multi(
-    ST_SetSRID(
-      ST_Transform(
-        ST_Intersection(
-          geom,
-          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
-        ),
-        3857
-      ),
-      3857
-    )
-  ) as geom INTO TABLE argenmap.plataforma_completa
-FROM
-  externos.plataforma_completa;
-  -- WHERE
-  --   gid NOT IN ('79', '6465')
-  --   OR geom IS NOT NULL;
-ALTER TABLE
-  argenmap.plataforma_completa
-ADD
-  PRIMARY KEY (gid);
-CREATE INDEX gix_plataforma_completa_geom ON argenmap.plataforma_completa USING gist(geom) TABLESPACE pg_default;
-CLUSTER argenmap.plataforma_completa USING gix_plataforma_completa_geom;
-ANALYZE argenmap.plataforma_completa;
-SELECT
-  Populate_Geometry_Columns('argenmap.plataforma_completa' :: regclass :: oid);
-ALTER TABLE
-  argenmap.plataforma_completa OWNER to admins;
-GRANT
-SELECT
-  ON TABLE argenmap.plataforma_completa TO readonly;
-
--- Fin plataforma_completa
-
 -- Convertir etiquetas_provincias
 
 DROP TABLE IF EXISTS argenmap.etiquetas_provincias;
@@ -777,3 +661,83 @@ SELECT
   ON TABLE argenmap.etiquetas_paises TO readonly;
 
 -- Fin etiquetas_paises
+
+-- Convertir plataforma_continental
+
+DROP TABLE IF EXISTS argenmap.plataforma_continental;
+SELECT
+  gid,
+  entidad,
+  objeto,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.plataforma_continental
+FROM
+  public.plataforma_continental;
+ALTER TABLE
+  argenmap.plataforma_continental
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_plataforma_continental_geom ON argenmap.plataforma_continental USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.plataforma_continental USING gix_etiquetas_provincias_geom;
+ANALYZE argenmap.plataforma_continental;
+SELECT
+  Populate_Geometry_Columns('argenmap.plataforma_continental' :: regclass :: oid);
+ALTER TABLE
+  argenmap.plataforma_continental OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.plataforma_continental TO readonly;
+
+-- Fin plataforma_continental
+
+
+-- Convertir rutas_nacionales_2021_geocarto
+
+DROP TABLE IF EXISTS argenmap.rutas_nacionales_2021_geocarto;
+SELECT
+  gid,
+  rtn,
+  typ,
+  rst,
+  jer,
+  hct,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.rutas_nacionales_2021_geocarto
+FROM
+  externos.rutas_nacionales_2021_geocarto;
+ALTER TABLE
+  argenmap.rutas_nacionales_2021_geocarto
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_rutas_nacionales_2021_geocarto_geom ON argenmap.rutas_nacionales_2021_geocarto USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.rutas_nacionales_2021_geocarto USING gix_etiquetas_provincias_geom;
+ANALYZE argenmap.rutas_nacionales_2021_geocarto;
+SELECT
+  Populate_Geometry_Columns('argenmap.rutas_nacionales_2021_geocarto' :: regclass :: oid);
+ALTER TABLE
+  argenmap.rutas_nacionales_2021_geocarto OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.rutas_nacionales_2021_geocarto TO readonly;
+
+-- Fin rutas_nacionales_2021_geocarto
