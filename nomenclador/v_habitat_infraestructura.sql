@@ -35,7 +35,7 @@ FROM
 						gna,
 						nam::varchar,
 						sag::varchar
-					   FROM puntos_de_asentamientos_y_edificios
+					   FROM v_asentamientos_humanos_ign
 	 UNION 
 	SELECT gid,
 						entidad,

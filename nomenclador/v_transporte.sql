@@ -57,17 +57,6 @@ FROM
 						gna,
 						nam::varchar,
 						sag::varchar
-					   FROM lineas_de_transporte_fluvial_lacustre_y_maritimo
-	 UNION 
-	SELECT gid,
-						entidad,
-						objeto,
-						geom,
-						centroide,
-						fna::varchar,
-						gna,
-						nam::varchar,
-						sag::varchar
 					   FROM puntos_de_cruces_y_enlaces
 	 UNION 
 	SELECT gid,

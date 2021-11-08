@@ -289,37 +289,6 @@ GRANT SELECT ON TABLE argenmap.vial TO readonly;
 
 -- Fin vial
 
--- Convertir red_vial_nacional_dnv
-
-DROP TABLE IF EXISTS argenmap.red_vial_nacional_dnv;
-SELECT
-  gid,
-  ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom,
-  hct, 
-  cod_rn INTO TABLE argenmap.red_vial_nacional_dnv
-FROM
-  public.red_vial_nacional_dnv_2018;
-
-ALTER TABLE argenmap.red_vial_nacional_dnv 
-ADD PRIMARY KEY (gid);
-
-CREATE INDEX gix_red_vial_nacional_dnv_geom 
-ON argenmap.red_vial_nacional_dnv 
-USING gist(geom) TABLESPACE pg_default;
-
-CLUSTER argenmap.red_vial_nacional_dnv 
-USING gix_red_vial_nacional_dnv_geom;
-ANALYZE argenmap.red_vial_nacional_dnv;
-
-SELECT Populate_Geometry_Columns('argenmap.red_vial_nacional_dnv'::regclass::oid);
-
-ALTER TABLE argenmap.red_vial_nacional_dnv
-    OWNER to admins;
-
-GRANT SELECT ON TABLE argenmap.red_vial_nacional_dnv TO readonly;
-
--- Fin red_vial_nacional_dnv
-
 -- Convertir lineas_de_transporte_ferroviario
 
 DROP TABLE IF EXISTS argenmap.lineas_de_transporte_ferroviario;
@@ -383,16 +352,23 @@ GRANT SELECT ON TABLE argenmap.lineas_de_geomorfologia TO readonly;
 -- Fin lineas_de_geomorfologia
 
 -- Convertir puntos_de_geomorfologia
--- REVISAR ERROR:  transform: couldn't project point (-1.79769e+308 -1.79769e+308 -1.79769e+308): latitude or longitude exceeded limits (-14)
 DROP TABLE IF EXISTS argenmap.puntos_de_geomorfologia;
 SELECT
   gid,
-  ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom, 
-  entidad, 
-  fna INTO TABLE argenmap.puntos_de_geomorfologia
+  entidad,
+  fna,
+  ST_SetSRID(
+    ST_Transform(
+      ST_Intersection(
+        geom,
+        ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+      ),
+      3857
+    ),
+    3857
+  ) as geom INTO TABLE argenmap.puntos_de_geomorfologia
 FROM
-  public.puntos_de_geomorfologia
-WHERE gid NOT IN ('17636', '64937');
+  public.puntos_de_geomorfologia;
 
 ALTER TABLE argenmap.puntos_de_geomorfologia 
 ADD PRIMARY KEY (gid);
@@ -414,66 +390,6 @@ GRANT SELECT ON TABLE argenmap.puntos_de_geomorfologia TO readonly;
 
 -- Fin puntos_de_geomorfologia
 
--- Convertir toponimos_oceano
-
-DROP TABLE IF EXISTS argenmap.toponimos_oceano;
-SELECT
-  gid,
-  ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom, 
-  nombre INTO TABLE argenmap.toponimos_oceano
-FROM
-  public.toponimos_oceano;
-
-ALTER TABLE argenmap.toponimos_oceano 
-ADD PRIMARY KEY (gid);
-
-CREATE INDEX gix_toponimos_oceano_geom 
-ON argenmap.toponimos_oceano 
-USING gist(geom) TABLESPACE pg_default;
-
-CLUSTER argenmap.toponimos_oceano 
-USING gix_toponimos_oceano_geom;
-ANALYZE argenmap.toponimos_oceano;
-
-SELECT Populate_Geometry_Columns('argenmap.toponimos_oceano'::regclass::oid);
-
-ALTER TABLE argenmap.toponimos_oceano
-    OWNER to admins;
-
-GRANT SELECT ON TABLE argenmap.toponimos_oceano TO readonly;
-
--- Fin toponimos_oceano
-
--- Convertir toponimia_maritima
-
-DROP TABLE IF EXISTS argenmap.toponimia_maritima;
-SELECT
-  gid,
-  ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom, 
-  nombre  INTO TABLE argenmap.toponimia_maritima
-FROM
-  public.toponimia_maritima;
-
-ALTER TABLE argenmap.toponimia_maritima 
-ADD PRIMARY KEY (gid);
-
-CREATE INDEX gix_toponimia_maritima_geom 
-ON argenmap.toponimia_maritima 
-USING gist(geom) TABLESPACE pg_default;
-
-CLUSTER argenmap.toponimia_maritima 
-USING gix_toponimia_maritima_geom;
-ANALYZE argenmap.toponimia_maritima;
-
-SELECT Populate_Geometry_Columns('argenmap.toponimia_maritima'::regclass::oid);
-
-ALTER TABLE argenmap.toponimia_maritima
-    OWNER to admins;
-
-GRANT SELECT ON TABLE argenmap.toponimia_maritima TO readonly;
-
--- Fin toponimia_maritima
-
 -- Convertir linea_de_limite
 
 DROP TABLE IF EXISTS argenmap.linea_de_limite;
@@ -481,8 +397,8 @@ SELECT
   gid,
   --ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom,
   entidad,
-  vlj,
   objeto,
+  nam,
   ST_Multi(
     ST_SetSRID(
       ST_Transform(
@@ -528,20 +444,18 @@ SELECT
   fna,
   ca1,
   ahb,
-  ST_Multi(
-    ST_SetSRID(
-      ST_Transform(
-        ST_Intersection(
-          geom,
-          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
-        ),
-        3857
+  ST_SetSRID(
+    ST_Transform(
+      ST_Intersection(
+        geom,
+        ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
       ),
       3857
-    )
+    ),
+    3857
   ) as geom INTO TABLE argenmap.puntos_de_asentamientos_y_edificios
 FROM
-  public.puntos_de_asentamientos_y_edificios;
+  public.v_asentamientos_humanos;
 ALTER TABLE
   argenmap.puntos_de_asentamientos_y_edificios
 ADD
@@ -636,3 +550,194 @@ SELECT
   ON TABLE argenmap.provincia TO readonly;
 
 -- Fin provincia
+
+-- Convertir toponimos_oceano_maritimo
+
+DROP TABLE IF EXISTS argenmap.toponimos_oceano_maritimo;
+SELECT
+  gid,
+  nombre,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.toponimos_oceano_maritimo
+FROM
+  externos.toponimos_oceano_maritimo;
+ALTER TABLE
+  argenmap.toponimos_oceano_maritimo
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_toponimos_oceano_maritimo_geom ON argenmap.toponimos_oceano_maritimo USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.toponimos_oceano_maritimo USING gix_toponimos_oceano_maritimo_geom;
+ANALYZE argenmap.toponimos_oceano_maritimo;
+SELECT
+  Populate_Geometry_Columns('argenmap.toponimos_oceano_maritimo' :: regclass :: oid);
+ALTER TABLE
+  argenmap.toponimos_oceano_maritimo OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.toponimos_oceano_maritimo TO readonly;
+
+-- Fin toponimos_oceano_maritimo
+
+-- Convertir etiquetas_provincias
+
+DROP TABLE IF EXISTS argenmap.etiquetas_provincias;
+SELECT
+  gid,
+  fna,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.etiquetas_provincias
+FROM
+  externos.etiquetas_provincias;
+ALTER TABLE
+  argenmap.etiquetas_provincias
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_etiquetas_provincias_geom ON argenmap.etiquetas_provincias USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.etiquetas_provincias USING gix_etiquetas_provincias_geom;
+ANALYZE argenmap.etiquetas_provincias;
+SELECT
+  Populate_Geometry_Columns('argenmap.etiquetas_provincias' :: regclass :: oid);
+ALTER TABLE
+  argenmap.etiquetas_provincias OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.etiquetas_provincias TO readonly;
+
+-- Fin etiquetas_provincias
+
+-- Convertir etiquetas_paises
+
+DROP TABLE IF EXISTS argenmap.etiquetas_provincias;
+SELECT
+  gid,
+  nam,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.etiquetas_paises
+FROM
+  externos.etiquetas_paises;
+ALTER TABLE
+  argenmap.etiquetas_paises
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_etiquetas_paises_geom ON argenmap.etiquetas_paises USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.etiquetas_paises USING gix_etiquetas_paises_geom;
+ANALYZE argenmap.etiquetas_paises;
+SELECT
+  Populate_Geometry_Columns('argenmap.etiquetas_paises' :: regclass :: oid);
+ALTER TABLE
+  argenmap.etiquetas_paises OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.etiquetas_paises TO readonly;
+
+-- Fin etiquetas_paises
+
+-- Convertir plataforma_continental
+
+DROP TABLE IF EXISTS argenmap.plataforma_continental;
+SELECT
+  gid,
+  entidad,
+  objeto,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.plataforma_continental
+FROM
+  public.plataforma_continental;
+ALTER TABLE
+  argenmap.plataforma_continental
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_plataforma_continental_geom ON argenmap.plataforma_continental USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.plataforma_continental USING gix_etiquetas_provincias_geom;
+ANALYZE argenmap.plataforma_continental;
+SELECT
+  Populate_Geometry_Columns('argenmap.plataforma_continental' :: regclass :: oid);
+ALTER TABLE
+  argenmap.plataforma_continental OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.plataforma_continental TO readonly;
+
+-- Fin plataforma_continental
+
+
+-- Convertir rutas_nacionales_2021_geocarto
+
+DROP TABLE IF EXISTS argenmap.rutas_nacionales_2021_geocarto;
+SELECT
+  gid,
+  rtn,
+  typ,
+  rst,
+  jer,
+  hct,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom INTO TABLE argenmap.rutas_nacionales_2021_geocarto
+FROM
+  externos.rutas_nacionales_2021_geocarto;
+ALTER TABLE
+  argenmap.rutas_nacionales_2021_geocarto
+ADD
+  PRIMARY KEY (gid);
+CREATE INDEX gix_rutas_nacionales_2021_geocarto_geom ON argenmap.rutas_nacionales_2021_geocarto USING gist(geom) TABLESPACE pg_default;
+CLUSTER argenmap.rutas_nacionales_2021_geocarto USING gix_etiquetas_provincias_geom;
+ANALYZE argenmap.rutas_nacionales_2021_geocarto;
+SELECT
+  Populate_Geometry_Columns('argenmap.rutas_nacionales_2021_geocarto' :: regclass :: oid);
+ALTER TABLE
+  argenmap.rutas_nacionales_2021_geocarto OWNER to admins;
+GRANT
+SELECT
+  ON TABLE argenmap.rutas_nacionales_2021_geocarto TO readonly;
+
+-- Fin rutas_nacionales_2021_geocarto
