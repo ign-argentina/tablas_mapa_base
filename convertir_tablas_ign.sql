@@ -170,6 +170,7 @@ GRANT SELECT ON TABLE argenmap.areas_de_zona_costera TO readonly;
 DROP TABLE IF EXISTS argenmap.area_protegida;
 SELECT
   gid,
+  objectid,
   ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom,
   fna INTO TABLE argenmap.area_protegida
 FROM
