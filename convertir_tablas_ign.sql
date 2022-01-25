@@ -748,6 +748,10 @@ SELECT
 DROP TABLE IF EXISTS argenmap.red_vial_nacional;
 SELECT
   gid,
+  typ,
+  rtn,
+  rst,
+  hct,
   ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom INTO TABLE argenmap.red_vial_nacional
 FROM
   public.red_vial_nacional;
@@ -778,6 +782,10 @@ GRANT SELECT ON TABLE argenmap.red_vial_nacional TO readonly;
 DROP TABLE IF EXISTS argenmap.red_vial_provincial;
 SELECT
   gid,
+  typ,
+  rtn,
+  rst,
+  hct,
   ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom INTO TABLE argenmap.red_vial_provincial
 FROM
   public.red_vial_provincial;
