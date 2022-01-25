@@ -742,3 +742,62 @@ SELECT
   ON TABLE argenmap.rutas_nacionales_2021_geocarto TO readonly;
 
 -- Fin rutas_nacionales_2021_geocarto
+
+-- Convertir red_vial_nacional
+
+DROP TABLE IF EXISTS argenmap.red_vial_nacional;
+SELECT
+  gid,
+  ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom INTO TABLE argenmap.red_vial_nacional
+FROM
+  public.red_vial_nacional;
+
+ALTER TABLE argenmap.red_vial_nacional 
+ADD PRIMARY KEY (gid);
+
+CREATE INDEX gix_red_vial_nacional_geom 
+ON argenmap.red_vial_nacional 
+USING gist(geom) TABLESPACE pg_default;
+
+CLUSTER argenmap.red_vial_nacional 
+USING gix_red_vial_nacional_geom;
+ANALYZE argenmap.red_vial_nacional;
+
+SELECT Populate_Geometry_Columns('argenmap.red_vial_nacional'::regclass::oid);
+
+ALTER TABLE argenmap.red_vial_nacional
+    OWNER to admins;
+
+GRANT SELECT ON TABLE argenmap.red_vial_nacional TO readonly;
+
+-- Fin red_vial_nacional
+
+
+-- Convertir red_vial_provincial
+
+DROP TABLE IF EXISTS argenmap.red_vial_provincial;
+SELECT
+  gid,
+  ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom INTO TABLE argenmap.red_vial_provincial
+FROM
+  public.red_vial_provincial;
+
+ALTER TABLE argenmap.red_vial_provincial 
+ADD PRIMARY KEY (gid);
+
+CREATE INDEX gix_red_vial_provincial_geom 
+ON argenmap.red_vial_provincial 
+USING gist(geom) TABLESPACE pg_default;
+
+CLUSTER argenmap.red_vial_provincial 
+USING gix_red_vial_provincial_geom;
+ANALYZE argenmap.red_vial_provincial;
+
+SELECT Populate_Geometry_Columns('argenmap.red_vial_provincial'::regclass::oid);
+
+ALTER TABLE argenmap.red_vial_provincial
+    OWNER to admins;
+
+GRANT SELECT ON TABLE argenmap.red_vial_provincial TO readonly;
+
+-- Fin red_vial_provincial
