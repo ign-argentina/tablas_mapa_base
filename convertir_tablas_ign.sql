@@ -731,7 +731,7 @@ ALTER TABLE
 ADD
   PRIMARY KEY (gid);
 CREATE INDEX gix_rutas_nacionales_2021_geocarto_geom ON argenmap.rutas_nacionales_2021_geocarto USING gist(geom) TABLESPACE pg_default;
-CLUSTER argenmap.rutas_nacionales_2021_geocarto USING gix_etiquetas_provincias_geom;
+CLUSTER argenmap.rutas_nacionales_2021_geocarto USING gix_rutas_nacionales_2021_geocarto_geom;
 ANALYZE argenmap.rutas_nacionales_2021_geocarto;
 SELECT
   Populate_Geometry_Columns('argenmap.rutas_nacionales_2021_geocarto' :: regclass :: oid);
