@@ -600,7 +600,7 @@ SELECT
       ST_Transform(
         ST_Intersection(
           geom,
-          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+          ST_MakeEnvelope(-180, -89, 180, 90, 3857) :: geometry
         ),
         3857
       ),
@@ -637,7 +637,7 @@ SELECT
       ST_Transform(
         ST_Intersection(
           geom,
-          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+          ST_MakeEnvelope(-180, -89, 180, 90, 3857) :: geometry
         ),
         3857
       ),
