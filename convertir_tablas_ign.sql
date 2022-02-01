@@ -689,7 +689,7 @@ ALTER TABLE
 ADD
   PRIMARY KEY (gid);
 CREATE INDEX gix_plataforma_continental_geom ON argenmap.plataforma_continental USING gist(geom) TABLESPACE pg_default;
-CLUSTER argenmap.plataforma_continental USING gix_etiquetas_provincias_geom;
+CLUSTER argenmap.plataforma_continental USING gix_plataforma_continental_geom;
 ANALYZE argenmap.plataforma_continental;
 SELECT
   Populate_Geometry_Columns('argenmap.plataforma_continental' :: regclass :: oid);
