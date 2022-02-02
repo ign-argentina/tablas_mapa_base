@@ -296,6 +296,7 @@ DROP TABLE IF EXISTS argenmap.lineas_de_transporte_ferroviario;
 SELECT
   gid,
   ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom,
+  fun,
   fna INTO TABLE argenmap.lineas_de_transporte_ferroviario
 FROM
   public.lineas_de_transporte_ferroviario;
