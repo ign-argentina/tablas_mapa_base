@@ -79,7 +79,9 @@ SELECT
   gid,
   ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom,
   entidad,
-  fna INTO TABLE argenmap.areas_de_aguas_continentales
+  fna,
+  delta
+  INTO TABLE argenmap.areas_de_aguas_continentales
 FROM
   public.areas_de_aguas_continentales;
 
@@ -110,7 +112,9 @@ SELECT
   gid,
   ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom,
   entidad,
-  fna INTO TABLE argenmap.lineas_de_aguas_continentales
+  fna,
+  hyp
+  INTO TABLE argenmap.lineas_de_aguas_continentales
 FROM
   public.lineas_de_aguas_continentales;
 
@@ -170,7 +174,6 @@ GRANT SELECT ON TABLE argenmap.areas_de_zona_costera TO readonly;
 DROP TABLE IF EXISTS argenmap.area_protegida;
 SELECT
   gid,
-  objectid,
   ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom,
   fna INTO TABLE argenmap.area_protegida
 FROM
@@ -601,7 +604,7 @@ SELECT
       ST_Transform(
         ST_Intersection(
           geom,
-          ST_MakeEnvelope(-180, -89, 180, 90, 3857) :: geometry
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
         ),
         3857
       ),
@@ -629,7 +632,7 @@ SELECT
 
 -- Convertir etiquetas_paises
 
-DROP TABLE IF EXISTS argenmap.etiquetas_provincias;
+DROP TABLE IF EXISTS argenmap.etiquetas_paises;
 SELECT
   gid,
   nam,
@@ -638,7 +641,7 @@ SELECT
       ST_Transform(
         ST_Intersection(
           geom,
-          ST_MakeEnvelope(-180, -89, 180, 90, 3857) :: geometry
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
         ),
         3857
       ),
@@ -701,48 +704,6 @@ SELECT
   ON TABLE argenmap.plataforma_continental TO readonly;
 
 -- Fin plataforma_continental
-
-
--- Convertir rutas_nacionales_2021_geocarto
-
-DROP TABLE IF EXISTS argenmap.rutas_nacionales_2021_geocarto;
-SELECT
-  gid,
-  rtn,
-  typ,
-  rst,
-  jer,
-  hct,
-  ST_Multi(
-    ST_SetSRID(
-      ST_Transform(
-        ST_Intersection(
-          geom,
-          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
-        ),
-        3857
-      ),
-      3857
-    )
-  ) as geom INTO TABLE argenmap.rutas_nacionales_2021_geocarto
-FROM
-  externos.rutas_nacionales_2021_geocarto;
-ALTER TABLE
-  argenmap.rutas_nacionales_2021_geocarto
-ADD
-  PRIMARY KEY (gid);
-CREATE INDEX gix_rutas_nacionales_2021_geocarto_geom ON argenmap.rutas_nacionales_2021_geocarto USING gist(geom) TABLESPACE pg_default;
-CLUSTER argenmap.rutas_nacionales_2021_geocarto USING gix_rutas_nacionales_2021_geocarto_geom;
-ANALYZE argenmap.rutas_nacionales_2021_geocarto;
-SELECT
-  Populate_Geometry_Columns('argenmap.rutas_nacionales_2021_geocarto' :: regclass :: oid);
-ALTER TABLE
-  argenmap.rutas_nacionales_2021_geocarto OWNER to admins;
-GRANT
-SELECT
-  ON TABLE argenmap.rutas_nacionales_2021_geocarto TO readonly;
-
--- Fin rutas_nacionales_2021_geocarto
 
 -- Convertir red_vial_nacional
 
@@ -810,3 +771,134 @@ ALTER TABLE argenmap.red_vial_provincial
 GRANT SELECT ON TABLE argenmap.red_vial_provincial TO readonly;
 
 -- Fin red_vial_provincial
+
+-- Convertir cun_u0129
+
+DROP TABLE IF EXISTS argenmap.cun_u0129;
+SELECT
+  id,
+  cota,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom
+  INTO TABLE argenmap.cun_u0129
+FROM
+  externos.cun_u0129;
+
+ALTER TABLE argenmap.cun_u0129 
+ADD PRIMARY KEY (id);
+
+CREATE INDEX gix_cun_u0129_geom 
+ON argenmap.cun_u0129 
+USING gist(geom) TABLESPACE pg_default;
+
+CLUSTER argenmap.cun_u0129 
+USING gix_cun_u0129_geom;
+ANALYZE argenmap.cun_u0129;
+
+SELECT Populate_Geometry_Columns('argenmap.cun_u0129'::regclass::oid);
+
+ALTER TABLE argenmap.cun_u0129
+    OWNER to admins;
+
+GRANT SELECT ON TABLE argenmap.cun_u0129 TO readonly;
+
+-- Fin cun_u0129
+
+
+-- Convertir glaciares
+
+DROP TABLE IF EXISTS argenmap.glaciares;
+SELECT
+  gid,
+  fna,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom
+  INTO TABLE argenmap.glaciares
+FROM
+  public.glaciares;
+
+ALTER TABLE argenmap.glaciares 
+ADD PRIMARY KEY (gid);
+
+CREATE INDEX gix_glaciares_geom 
+ON argenmap.glaciares 
+USING gist(geom) TABLESPACE pg_default;
+
+CLUSTER argenmap.glaciares 
+USING gix_glaciares_geom;
+ANALYZE argenmap.glaciares;
+
+SELECT Populate_Geometry_Columns('argenmap.glaciares'::regclass::oid);
+
+ALTER TABLE argenmap.glaciares
+    OWNER to admins;
+
+GRANT SELECT ON TABLE argenmap.glaciares TO readonly;
+
+-- Fin glaciares
+
+
+-- Convertir salares
+
+DROP TABLE IF EXISTS argenmap.salares;
+SELECT
+  gid,
+  objeto,
+  entidad,
+  fna,
+  nam,
+  ST_Multi(
+    ST_SetSRID(
+      ST_Transform(
+        ST_Intersection(
+          geom,
+          ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
+        ),
+        3857
+      ),
+      3857
+    )
+  ) as geom
+  INTO TABLE argenmap.salares
+FROM
+  public.salares;
+
+ALTER TABLE argenmap.salares 
+ADD PRIMARY KEY (gid);
+
+CREATE INDEX gix_salares_geom 
+ON argenmap.salares 
+USING gist(geom) TABLESPACE pg_default;
+
+CLUSTER argenmap.salares 
+USING gix_salares_geom;
+ANALYZE argenmap.salares;
+
+SELECT Populate_Geometry_Columns('argenmap.salares'::regclass::oid);
+
+ALTER TABLE argenmap.salares
+    OWNER to admins;
+
+GRANT SELECT ON TABLE argenmap.salares TO readonly;
+
+-- Fin salares
