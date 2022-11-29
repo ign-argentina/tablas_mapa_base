@@ -79,8 +79,7 @@ SELECT
   gid,
   ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom,
   entidad,
-  fna,
-  delta
+  fna
   INTO TABLE argenmap.areas_de_aguas_continentales
 FROM
   public.areas_de_aguas_continentales;
