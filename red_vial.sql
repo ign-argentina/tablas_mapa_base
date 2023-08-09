@@ -1,3 +1,15 @@
+UPDATE osm.lines
+SET name = NULL
+WHERE
+	highway IS NOT NULL
+AND
+	name IS NOT NULL
+AND
+    ST_Intersects(
+      ST_MakeEnvelope(-55.569620, -50.408518, -63.156454,-53.416080, 4326), 
+      wkb_geometry
+    );
+
 DROP TABLE IF EXISTS argenmap.osm_vial CASCADE;
 CREATE TABLE argenmap.osm_vial AS
 SELECT
@@ -16,33 +28,39 @@ SELECT
   other_tags -> 'bridge' AS bridge,
   other_tags -> 'tunnel' AS tunnel,
   CAST(other_tags -> 'layer' AS INT) AS layer,
-  CAST(other_tags -> 'maxspeed' AS INT) AS maxspeed,
+  other_tags -> 'maxspeed' AS maxspeed,
+  --CAST(other_tags -> 'maxspeed' AS INT) AS maxspeed,
   CAST(other_tags -> 'lanes' AS INT) AS lanes,
   other_tags -> 'surface' AS surface,
+  other_tags -> 'embankment' AS embankment,
   other_tags -> 'smoothness' AS smoothness,
   ST_SetSRID(ST_Transform(wkb_geometry, 3857),3857) AS geom
 FROM
   osm.lines
 WHERE
   highway IN (
-    'unclassified',
     'motorway',
-    'raceway',
-    'tertiary_link',
-    'motorway_link',
-    'pedestrian',
-    'secondary_link',
-    'primary_link',
-    'service',
-    'trunk_link',
-    'living_street',
-    'residential',
-    'construction',
-    'secondary',
+    'trunk',
     'primary',
-    'track',
+    'secondary',
     'tertiary',
-    'trunk'
+    'unclassified',
+    'residential',
+    'road',
+    'pedestrian',
+    'track',
+    'living_street',
+    'motorway_link',
+    'trunk_link',
+    'primary_link',
+    'secondary_link',
+    'tertiary_link',
+    'service',
+    'construction',
+    'raceway',
+    'path',
+    'footway',
+    'steps'
   );
 
 ALTER TABLE argenmap.osm_vial
