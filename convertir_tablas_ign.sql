@@ -361,6 +361,7 @@ SELECT
   gid,
   entidad,
   fna,
+  alt,
   ST_SetSRID(
     ST_Transform(
       ST_Intersection(
