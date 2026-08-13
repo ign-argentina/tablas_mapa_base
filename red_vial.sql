@@ -27,7 +27,19 @@ SELECT
   other_tags -> 'access' AS access,
   other_tags -> 'bridge' AS bridge,
   other_tags -> 'tunnel' AS tunnel,
-  CAST(other_tags -> 'layer' AS INT) AS layer,
+  CASE 
+    WHEN other_tags -> 'layer' IS NOT NULL THEN (
+      SELECT 
+        CASE 
+          WHEN MIN(CAST(val AS INT)) < 0 THEN 
+            MIN(CAST(val AS INT)) -- Mayor absoluto en negativos
+          ELSE 
+            MAX(CAST(val AS INT)) -- Mayor en positivos
+        END
+      FROM unnest(string_to_array(other_tags -> 'layer', ';')) AS val
+    )
+  END AS layer,
+  --CAST(other_tags -> 'layer' AS INT) AS layer,
   other_tags -> 'maxspeed' AS maxspeed,
   --CAST(other_tags -> 'maxspeed' AS INT) AS maxspeed,
   CAST(other_tags -> 'lanes' AS INT) AS lanes,
@@ -61,7 +73,14 @@ WHERE
     'path',
     'footway',
     'steps'
-  );
+  )
+--AND 
+--  other_tags -> 'footway' NOT IN (
+--    'crossing',
+--    'sidewalk',
+--    'traffic_island'  
+--  )
+;
 
 ALTER TABLE argenmap.osm_vial
 ADD PRIMARY KEY (osm_id);
