@@ -484,23 +484,22 @@ SELECT
 
 DROP TABLE IF EXISTS argenmap.departamento;
 SELECT
-  gid,
-  --ST_SetSRID(ST_Transform(geom, 3857),3857) AS geom,
-  fna,
-  ST_Multi(
-    ST_SetSRID(
-      ST_Transform(
-        ST_Intersection(
-          geom,
+    ROW_NUMBER() OVER ()::integer AS gid,
+    ap.gid AS gid_origen,
+    d.geom::geometry(Polygon, 3857) AS geom,
+    ap.fna
+INTO TABLE argenmap.departamento
+FROM public.departamento AS ap
+CROSS JOIN LATERAL
+    ST_Dump(
+	  ST_Transform(
+	    ST_Intersection(
+          ap.geom,
           ST_MakeEnvelope(-180, -89, 180, 90, 4326) :: geometry
-        ),
-        3857
-      ),
-      3857
-    )
-  ) as geom INTO TABLE argenmap.departamento
-FROM
-  public.departamento;
+        ), 
+		3857)
+	) AS d;
+
 ALTER TABLE
   argenmap.departamento
 ADD
